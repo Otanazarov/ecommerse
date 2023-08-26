@@ -82,7 +82,8 @@ authRoute.post('/refresh',async(req,res)=>{
 })
 authRoute.post('/logout',authGuard,async(req,res)=>{
     try {
-        const ID=req.id
+        const ID=req.ID
+        console.log(req.ID);
         await pool.query(`UPDATE user SET hashedRefreshToken=NULL WHERE ID='${ID}'`)
        res.send({succes:true})
     } catch (error) {

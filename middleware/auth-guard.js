@@ -1,15 +1,20 @@
 const jwt = require('jsonwebtoken');
-const authGuard = (req, res, next) => {
+const pool = require('../db/db.config')
+const authGuard = async (req, res, next) => {
   const token = req.headers?.authorization?.split(' ')[1]
-  console.log(token);
   try {
     const accesTokenSecret = process.env.ACCES_WEP_TOKEN
     const decoded = jwt.verify(token,accesTokenSecret);
-    req.id = decoded.id;
+    req.ID = decoded.ID;
     req.role = decoded.role
+    const user = await pool.query(`SELECT * FROM user WHERE ID=${decoded.ID}`)
+    console.log(user);
+    if(user[0][0].hashedRefreshToken == null){
+      throw new Error('refresh token not found')
+    }
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    return res.status(401).json(error.message);
   }
 };
 module.exports = authGuard;
