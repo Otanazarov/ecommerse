@@ -5,7 +5,7 @@ const authGuard = (req, res, next) => {
   try {
     const accesTokenSecret = process.env.ACCES_WEP_TOKEN
     const decoded = jwt.verify(token,accesTokenSecret);
-    req.username = decoded.name;
+    req.id = decoded.id;
     req.role = decoded.role
     next();
   } catch (error) {

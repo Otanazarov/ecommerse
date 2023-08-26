@@ -16,26 +16,4 @@ const roleGuard = (...roles) => {
     }
   };
 };
-
-// const roles = {
-//     admin: 'admin',
-//     editor: 'editor',
-//     guest: 'guest' 
-//   }
-
-//   function roleGuard(role) {
-//     return function(req, res, next) {
-//         console.log(role);
-//       // Get user role from request
-//       const userRole = req.body.role;
-//       console.log(userRole);
-      
-//       if (userRole === roles[role]) {
-//         next() // User has right role, call next middleware
-//       } else {
-//         res.status(403).send('Unauthorized')
-//       }   
-//     }
-//   }
-
 module.exports = roleGuard;
