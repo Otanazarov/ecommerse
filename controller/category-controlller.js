@@ -55,20 +55,24 @@ async function put(req, res) {
             throw new Error(`category ${ID} ID not found`)
         }
         const { nameUz, nameRu, descUz, descRu, image } = req.body
+        const params = { nameUz, nameRu, descUz, descRu, image }
         const category = {
-            nameUz: nameUz || categoryID[0][0].nameUz,
-            nameRu: nameRu || categoryID[0][0].nameRu,
-            descUz: descUz || categoryID[0][0].descUz,
-            descRu: descRu || categoryID[0][0].descRu,
-            image: image   || categoryID[0][0].image
+            nameUz: nameUz !== undefined ? nameUz : categoryID[0][0].nameUz,    
+            nameRu: nameRu !== undefined ? nameRu : categoryID[0][0].nameRu,
+            descUz: descUz !== undefined ? descUz : categoryID[0][0].descUz,
+            descRu: descRu !== undefined ? descRu : categoryID[0][0].descRu,
+            image: image   !== undefined ? image  : categoryID[0][0].image
           }
+          console.log(category);
         const update = (`update category set ? where ID = ${ID}`)
         await pool.query(update, category)
-        res.send('bingo')
-        } catch (error) {
+        res.send('bingo')}
+         catch (error) {
         res.send(error.message)
         }
     }
+    
+
 async function remove(req,res){
     try {
         const ID = req.params.id
