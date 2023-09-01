@@ -8,15 +8,14 @@ const bcrypt = require('bcrypt')
 const authGuard = require('../middleware/auth-guard')
 const roleGuard = require('../middleware/role-guard')
 
-authRoute.post('/register',async(req,res)=>{
+authRoute.post('/register',async(req,res,next)=>{
     try{
         const {name,phone,Password} =req.body
-        const name_= await pool.query("SELECT name FROM user Where name='"+name+"'")   
-        console.log(name_); 
-        if(name_[0].length!=0){  
-            throw new Error(`Username:${name} already taken`)
-        }
         const phone_ = await pool.query("select phone from user where phone = '"+phone+"'")
+        console.log(phone_);
+        if(phone===undefined){
+            throw new Error(`need phone`)
+        }
         if(phone_[0].length!=0){
             throw new Error(`phone:${phone} already taken`)
         }
@@ -24,18 +23,17 @@ authRoute.post('/register',async(req,res)=>{
         res.send({succes:true})
     }
     catch(error){
-        res.send(error.message)
+        next(error)
         
     }
 })
 
-authRoute.post('/sign',async(req,res)=>{
+authRoute.post('/sign',async(req,res,next)=>{
     try {
-        const  {name,Password} = req.body;
-        const user= (await pool.query("select * from user where name='"+name+"'"))[0][0]
-        console.log(user);
+        const  {phone,Password} = req.body;
+        const user= (await pool.query("select * from user where phone='"+phone+"'"))[0][0]
         if(user==undefined ){  
-            throw new Error(`WRONG:name or hashedpassword`)
+            throw new Error(`WRONG: phone`)
         }
         const hashedPassword=user.hashedPassword
         if (!bcrypt.compareSync(Password,hashedPassword)) {
@@ -51,13 +49,13 @@ authRoute.post('/sign',async(req,res)=>{
             refreshTokenSecret,
             {expiresIn:"5d"}
         );
-        await pool.query(`Update user set hashedRefreshToken= "${await bcrypt.hash(refreshToken,5)}" where name='${user.name}'`)
+        await pool.query(`Update user set hashedRefreshToken= "${await bcrypt.hash(refreshToken,5)}" where phone='${user.phone}'`)
         res.send({succes:true,error: null,data:{accesToken,refreshToken}})
     } catch (error) {
-        res.send({succes:false,error: error,massage:error.message})
+        next(error)
     }
 })
-authRoute.post('/refresh',async(req,res)=>{
+authRoute.post('/refresh',async(req,res,next)=>{
     const refreshTokenFromClient = req.body.refreshToken
     try {
         const accessTokenSecret = process.env.ACCES_WEP_TOKEN
@@ -77,17 +75,23 @@ authRoute.post('/refresh',async(req,res)=>{
         await pool.query(`UPDATE user SET hashedRefreshToken='${newRefreshToken}'`)
          res.send({succes:true,data:{newAccesToken,newRefreshToken}})
     } catch (error) {
-        res.send(error.message)
+        next(error)
     }
 })
-authRoute.post('/logout',authGuard,async(req,res)=>{
+authRoute.post('/logout/:id',async(req,res,next)=>{
     try {
-        const ID=req.ID
-        console.log(req.ID);
+        const ID=req.params.id
+        const [[verify]] = await pool.query(`SELECT * FROM user WHERE ID=${ID}`)
+        if(verify===undefined){
+            throw new Error(`ID not Found`)
+        }
+        if(verify.hashedRefreshToken===null){
+            throw new Error(`Refresh Already NULL`)
+        }
         await pool.query(`UPDATE user SET hashedRefreshToken=NULL WHERE ID='${ID}'`)
        res.send({succes:true})
     } catch (error) {
-        res.send(error)
+        next(error)
     }   
 })
 

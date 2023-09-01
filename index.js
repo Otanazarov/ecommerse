@@ -7,11 +7,12 @@ const authGuard = require('./middleware/auth-guard')
 const roleGuard = require('./middleware/role-guard')
 const categoryRoute = require('./router/category-route')
 const userRoute = require('./router/user-route')
+const ApiResponse = require('./utils/response.js')
 
 
 config()
-app.use(express.json())
 
+app.use(express.json())
 const port= process.env.PORT || 3001
  
 app.listen(port,()=> {
@@ -22,7 +23,9 @@ app.use("/auth",authRoute)
 app.use("/category",categoryRoute)
 
 
-
+app.use((err,req,res,next)=>{
+    res.send(new ApiResponse(null,null,err.message));
+})
 
 
 

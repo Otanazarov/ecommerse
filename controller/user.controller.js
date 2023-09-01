@@ -1,33 +1,46 @@
 const pool = require('../db/db.config.js')
-async function post(req,res){
+const bcrypt = require('bcrypt')
+const Pagination = require('../utils/pagination.js')
+async function post(req,res,next){
     try {
-        const {name,phone,otp,image,region,role} = req.body
+        let {name,phone,otp,image,region,role,hashedPassword} = req.body
+        console.log(hashedPassword);
         const verify = await pool.query(`SELECT * FROM user WHERE name='${name}'`)
-        console.log(verify[0]);
+        const phoneVerify = await pool.query(`select phone from user where phone =${phone}`)
+        if (phoneVerify[0].length!==0) {
+            throw new Error(`phone already taken`)
+        }
         if(verify[0].length!=0){
             throw new Error(`username already taken`)
         }
-        const params = {name,phone,otp,image,region,role}
+        hashedPassword = await bcrypt.hashSync(hashedPassword, 7)  
+        console.log(hashedPassword);
+        const params = {name,phone,otp,image,region,role,hashedPassword}
+        console.log(params);
         const query = 'INSERT INTO user SET ?'
         await pool.query(query,params)
         res.send('true')
     } catch (error) {
-        res.send({error:error.message})
+        next(error)
     }
     
 
 }
 
-async function get(req,res){
+async function get(req,res,next){
     try {
         const ID = req.params.id
         const [result] = await pool.query(`SELECT * FROM user WHERE ID=${ID}`)
+        console.log(result[0]);
+        if(result[0]===undefined){
+            throw new Error(`id not found`)
+        }
         res.send(result)
     } catch (error) {
-        console.log({error:error.message});
+        next(error)
     }
 }
-async function put(req,res){
+async function put(req,res,next){
     try {
         const ID = req.params.id
         console.log(ID);
@@ -46,10 +59,10 @@ async function put(req,res){
           await pool.query(update, user)
           res.send("true")
     } catch (error) {
-        console.log({error:error.message});
+        next(error)
     }
 }
-async function remove(req,res){
+async function remove(req,res,next){
     try {
         const ID = req.params.id 
         const verify = await pool.query(`SELECT * FROM user WHERE ID=${ID}`)
@@ -58,12 +71,27 @@ async function remove(req,res){
         }
         await pool.query(`DELETE FROM user WHERE ID=${ID}`)
         res.send("true")
-
     } catch (error) {
-        res.send({error:error.message})
+        next(error)
     }
    
 }
 
+async function findAll(req,res,next){
+    try {
+        const {page,paginationLimit} = req.query
+        console.log(page);
+        const data = await pool.query(`SELECT * FROM user`) 
+        const verify = new Pagination(data[0].length,paginationLimit,page)
+        const [result] = await pool.query(`SELECT * FROM user LIMIT ${verify.limit} OFFSET ${verify.offset}`)
+        if(result.length==0){
+            throw new Error(`USER NOT FOUND`)
+        }  
+        res.send({data:result,pagination:verify})
+    } catch (error) {
+        next(error)
+    }
+}
 
-module.exports = {post,get,put,remove}
+
+module.exports = {post,get,put,remove,findAll}

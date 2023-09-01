@@ -1,6 +1,6 @@
 const pool = require('../db/db.config.js')
 const Pagination = require('../utils/pagination.js')
-async function post(req,res){
+async function post(req,res,next){
     try {
         const {nameUz,nameRu,descUz,descRu,image,parentCategoryID} = req.body
         const params = {nameUz,nameRu,descUz,descRu,image,parentCategoryID}
@@ -15,39 +15,38 @@ async function post(req,res){
         await pool.query(query,params)
         res.send('Succesfully created')
     } catch (error) {
-        console.log(error.status);
-        res.status(res.statusCode ||
-        500).send({succes:false,message:error.message})
+        next(error)
     }
 }
-async function findAll(req,res){
+async function findAll(req,res,next){
     try {
         const {page,paginationLimit} = req.query
-        const  {limit,offset} =  new Pagination(page,paginationLimit)
-        const [result] = await pool.query(`SELECT * FROM category LIMIT ${limit} OFFSET ${offset}`)
+        const data = await pool.query(`SELECT * FROM category`)
+        const verify =  new Pagination(data[0].length,paginationLimit,page)
+        const [result] = await pool.query(`SELECT * FROM category LIMIT ${verify.limit} OFFSET ${verify.offset}`)
+        console.log(verify.limit);
         if(result.length==0){
             throw new Error(`Category not found`)
         }
-        res.send(result)
+        res.send({data:result,pagination:verify})
     } catch (error) {
-        res.status(res.statusCode ||
-            500).send({succes:false,message:error.message})
+        next(error)
     }
 }
-async function getByID(req,res){
+async function getByID(req,res,next){
     try {
      const ID = req.params.id
      const [category] = await pool.query(`SELECT * FROM category WHERE ID=${ID}`)
      if(category.length==0){
         throw new Error(`ID not found`)
      }
-     res.send(verify[0])
+     res.send(category[0])
     } catch (error) {
-        res.send({succes:false,message:error.message})
+        next(error)
     }
 }
 
-async function put(req, res) {
+async function put(req, res,next) {
     try {
         const ID = req.params.id
         const categoryID = await pool.query(`select * from category where ID = '${ID}'`)
@@ -68,12 +67,12 @@ async function put(req, res) {
         await pool.query(update, category)
         res.send('bingo')}
          catch (error) {
-        res.send(error.message)
+         next(error)
         }
     }
     
 
-async function remove(req,res){
+async function remove(req,res,next){
     try {
         const ID = req.params.id
         const verify = await pool.query(`SELECT * FROM category WHERE ID=${ID}`)
@@ -83,7 +82,7 @@ async function remove(req,res){
         const remove = await pool.query(`DELETE FROM category WHERE ID=${ID}`)
         res.send('succes')
     } catch (error) {
-        res.send(error.message)
+        next(error)
     }
 }    
 
