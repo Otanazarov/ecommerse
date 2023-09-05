@@ -8,6 +8,7 @@ const roleGuard = require('./middleware/role-guard')
 const categoryRoute = require('./router/category-route')
 const userRoute = require('./router/user-route')
 const ApiResponse = require('./utils/response.js')
+const addressRoute = require('./router/address-route')
 
 
 config()
@@ -21,6 +22,7 @@ app.listen(port,()=> {
 app.use("/user",userRoute)
 app.use("/auth",authRoute)
 app.use("/category",categoryRoute)
+app.use("/address",addressRoute)
 
 
 app.use((err,req,res,next)=>{

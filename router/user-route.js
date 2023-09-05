@@ -1,4 +1,3 @@
-const get = require('../controller/user.controller')
 const express = require('express')
 const { Router } = require('express')
 const userRoute = Router()
