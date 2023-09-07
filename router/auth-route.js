@@ -32,6 +32,7 @@ authRoute.post('/sign',async(req,res,next)=>{
     try {
         const  {phone,Password} = req.body;
         const user= (await pool.query("select * from user where phone='"+phone+"'"))[0][0]
+        console.log(user);
         if(user==undefined ){  
             throw new Error(`WRONG: phone`)
         }
