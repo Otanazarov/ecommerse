@@ -4,8 +4,8 @@ const Pagination = require('../utils/pagination')
 
 async function post(req,res,next){
     try {
-        const {userID,region,refrencePoint,street,house,room} = req.body
-        const params = {userID,region,refrencePoint,street,house,room}
+        const {userID,region,referencePoint,street,house,room} = req.body
+        const params = {userID,region,referencePoint,street,house,room}
         const query = `INSERT INTO address SET ?`
         await pool.query(query,params)
         console.log(query,params);
@@ -19,14 +19,13 @@ async function getByID(req,res,next){
     try {
        const ID = req.params.id
        const [[find]] = await pool.query
-         (`SELECT address.ID, user.name, user.phone, address.region, address.street, address.house 
+         (`SELECT address.ID, address.userID, user.name, user.phone, address.region, address.street, address.house 
        FROM user 
        INNER JOIN address ON user.ID = address.userID 
        WHERE address.ID = ${ID}`) 
        if(!find){
         throw new Error(`ID not found`)
        }
-      
         console.log(find);
         res.send(find)
     } catch (error) {
@@ -60,12 +59,12 @@ async function update(req,res,next){
     if (!information){
         throw new Error(`ID not found`)
     }
-    const {userID,region,refrencePoint,street,house,room} = req.body
-    const params = {userID,region,refrencePoint,street,house,room}
+    const {userID,region,referencePoint,street,house,room} = req.body
+    const params = {userID,region,referencePoint,street,house,room}
     const address = {
         userID:userID!== undefined ? userID : information.userID,
         region:region!== undefined ? region : information.region,
-        refrencePoint:refrencePoint!== undefined ? refrencePoint :information.refrencePoint,
+        referencePoint:referencePoint!== undefined ? referencePoint :information.referencePoint,
         street:street!==undefined ? street : information.street,
         house:house!==undefined ? house : information.house,
         room:room!==undefined ? room : information.room

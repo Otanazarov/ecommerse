@@ -37,6 +37,7 @@ async function getByID(req,res,next){
     try {
      const ID = req.params.id
      const [category] = await pool.query(`SELECT * FROM category WHERE ID=${ID}`)
+     console.log(category);
      if(category.length==0){
         throw new Error(`ID not found`)
      }
